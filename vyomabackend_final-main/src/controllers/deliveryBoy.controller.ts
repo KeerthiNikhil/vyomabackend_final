@@ -7,14 +7,14 @@ export const createDeliveryBoy = async (req: Request, res: Response) => {
   try {
 
     const { name, phone, email } = req.body;
-
-    const image = req.file ? `/uploads/${req.file.filename}` : "";
-
+   
+    const file = req.file as Express.MulterS3.File;
+    
     const boy = await DeliveryBoy.create({
       name,
       phone,
       email,
-      image,
+      image: file.location,
     });
 
     res.status(201).json({

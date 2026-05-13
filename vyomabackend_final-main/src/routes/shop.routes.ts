@@ -11,6 +11,7 @@ import {
 import Shop from "../models/shop.model";
 import { getVendorShops } from "../controllers/shop.controller";
 import { restrictToVendor } from "../middleware/restrict.middleware";
+import { upload } from "../middleware/upload";
 
 const router = express.Router();
 
@@ -18,14 +19,9 @@ const router = express.Router();
 
 router.post(
   "/create",
-  protect,
-  restrictToVendor,
-  upload.array("shopImages", 3),
+  upload.array("shopImages", 5),
   createShop
 );
-
-/* GET MY SHOPS */
-
 
 /* GET ALL SHOPS */
 

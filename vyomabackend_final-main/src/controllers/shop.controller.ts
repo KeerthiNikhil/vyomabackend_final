@@ -5,7 +5,10 @@ import User from "../models/user.model";
 
 export const createShop = async (req: any, res: any) => {
   try {
+    
+    const files = req.files as Express.MulterS3.File[];
 
+const imageUrls = files.map((file) => file.location);
     const userId = req.user._id;
 
     const {
@@ -31,9 +34,7 @@ export const createShop = async (req: any, res: any) => {
       });
     }
 
-    const shopImages = req.files?.map(
-  (file: any) => `/uploads/${file.filename}`
-) || [];
+    const shopImages = imageUrls || [];
 
     const shop = await Shop.create({
       owner: userId,
@@ -184,8 +185,8 @@ export const addShopImages = async (req, res) => {
     const shopId = req.params.id;
 
     const newImages = req.files.map(
-      (file) => `/uploads/${file.filename}`
-    );
+  (file: any) => file.location
+);
 
     const shop = await Shop.findById(shopId);
 

@@ -70,7 +70,6 @@ app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/search", searchRoutes);
 app.use("/api/v1/delivery-boys", deliveryBoyRoutes);
 
-app.use("/uploads", express.static("uploads"));
 app.use("/api/v1/categories", categoryRoutes);
 app.use("/api/v1/wishlist", wishlistRoutes);
 app.use("/api/v1/address", addressRoutes);
