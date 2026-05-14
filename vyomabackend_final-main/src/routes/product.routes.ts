@@ -1,6 +1,6 @@
 import express from "express";
 import { protect } from "../middleware/auth.middleware";
-import upload  from "../middleware/upload.middleware";
+import upload from "../middleware/upload.middleware";
 import multer from "multer";
 import Product from "../models/product.model";
 

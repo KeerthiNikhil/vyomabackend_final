@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import helmet from "helmet";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
-
+import bannerRoutes from "./routes/banner.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import vendorRoutes from "./routes/vendor.routes.js";
 import shopRoutes from "./routes/shop.routes.js";
@@ -73,6 +73,7 @@ app.use("/api/v1/delivery-boys", deliveryBoyRoutes);
 app.use("/api/v1/categories", categoryRoutes);
 app.use("/api/v1/wishlist", wishlistRoutes);
 app.use("/api/v1/address", addressRoutes);
+app.use("/api/v1/banners", bannerRoutes);
 
 /* ================= PROTECTED ROUTE ================= */
 

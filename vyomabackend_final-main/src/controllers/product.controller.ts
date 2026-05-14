@@ -55,16 +55,20 @@ console.log("FINAL UNIT OPTIONS =", JSON.parse(unitOptions));
     }
 
     /* HANDLE MULTIPLE IMAGES */
-
+    console.log("REQ FILES =", req.files);
     const images: string[] = [];
 
-    if (req.files && Array.isArray(req.files)) {
+if (req.files && Array.isArray(req.files)) {
 
-      req.files.forEach((file: any) => {
-        images.push(`/uploads/${file.filename}`);
-      });
+  req.files.forEach((file: any) => {
 
-    }
+    console.log("PRODUCT IMAGE 👉", file.location);
+
+    images.push(file.location);
+
+  });
+
+}
 
     /* CREATE PRODUCT */
 
