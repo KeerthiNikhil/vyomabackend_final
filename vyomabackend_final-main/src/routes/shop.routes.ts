@@ -1,6 +1,5 @@
 import express from "express";
 import { protect } from "../middleware/auth.middleware";
-import upload  from "../middleware/upload.middleware";
 
 import {
   createShop,
@@ -19,6 +18,7 @@ const router = express.Router();
 
 router.post(
   "/create",
+  protect,
   upload.array("shopImages", 5),
   createShop
 );
