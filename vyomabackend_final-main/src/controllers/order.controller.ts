@@ -37,21 +37,35 @@ export const createRazorpayOrder = async (req, res) => {
 
 // ================= PLACE ORDER (ONLY COD) =================
 export const placeOrder = async (req, res) => {
-  try {
-    const { paymentMethod } = req.body;
 
-    // 🚨 BLOCK ONLINE ORDERS HERE
+  try {
+
+    const {
+      paymentMethod,
+      totalAmount,
+      deliveryCharge,
+      shippingAddress,
+    } = req.body;
+
     if (paymentMethod !== "COD") {
+
       return res.status(400).json({
         success: false,
         message: "Invalid payment method",
       });
+
     }
 
-    const cart = await Cart.findOne({ user: req.user.id });
+    const cart = await Cart.findOne({
+      user: req.user.id,
+    });
 
     if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ message: "Cart is empty" });
+
+      return res.status(400).json({
+        message: "Cart is empty",
+      });
+
     }
 
     const products = cart.items.map((item) => ({
@@ -60,28 +74,29 @@ export const placeOrder = async (req, res) => {
       price: item.price,
     }));
 
-    const totalAmount = cart.items.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-
     const shop = cart.items[0]?.shop;
 
-    if (!shop) {
-      return res.status(400).json({
-        message: "Shop not found in cart",
-      });
-    }
-
     const order = await Order.create({
+
       user: req.user.id,
+
       shop,
+
       products,
+
       totalAmount,
-      status: "pending",
+
+      deliveryCharge,
+
+      paymentMethod,
+
+      shippingAddress,
+
+      status: "Pending",
     });
 
     cart.items = [];
+
     await cart.save();
 
     res.json({
@@ -89,9 +104,15 @@ export const placeOrder = async (req, res) => {
       message: "Order placed successfully 🎉",
       order,
     });
+
   } catch (err) {
+
     console.error(err);
-    res.status(500).json({ message: "Order failed" });
+
+    res.status(500).json({
+      message: "Order failed",
+    });
+
   }
 };
 
@@ -167,14 +188,26 @@ console.log("FULL PAYMENT OBJECT 👉", payment);
 
     const shop = cart.items[0]?.shop;
 
-    await Order.create({
-      user: req.user.id,
-      shop,
-      products,
-      totalAmount,
-      paymentId: razorpay_payment_id,
-      status: "paid",
-    });
+   await Order.create({
+
+  user: req.user.id,
+
+  shop,
+
+  products,
+
+  totalAmount,
+
+  deliveryCharge: req.body.deliveryCharge || 0,
+
+  paymentMethod: "ONLINE",
+
+  paymentId: razorpay_payment_id,
+
+  shippingAddress: req.body.shippingAddress,
+
+  status: "Pending",
+});
 
     cart.items = [];
     await cart.save();

@@ -333,40 +333,83 @@ if (!product.unitOptions || product.unitOptions.length === 0) {
 };
 
 export const updateProduct = async (req: any, res: any) => {
-  try {
-    const { id } = req.params;
 
-    const product = await Product.findById(id);
+  try {
+
+    const { productId } = req.params;
+
+    console.log("UPDATE ID =", productId);
+    console.log("REQ BODY =", req.body);
+
+    const product = await Product.findById(productId);
 
     if (!product) {
+
       return res.status(404).json({
         success: false,
         message: "Product not found",
       });
+
     }
 
-    // ✅ Update fields
-    product.name = req.body.name || product.name;
-    product.description = req.body.description || product.description;
-    product.price = Number(req.body.price) || product.price;
-    product.stock = Number(req.body.stock) || product.stock;
+    // ✅ UPDATE FIELDS
+    product.name =
+      req.body.name || product.name;
+
+    product.description =
+      req.body.description || product.description;
+
+    product.price =
+      Number(req.body.price || product.price);
+
+    product.stock =
+      Number(req.body.stock || product.stock);
+
+    // ✅ RECALCULATE FINAL PRICE
+    if (
+      product.discountType &&
+      product.discountValue
+    ) {
+
+      if (product.discountType === "percentage") {
+
+        product.finalPrice =
+          product.price -
+          (product.price * product.discountValue) / 100;
+
+      } else {
+
+        product.finalPrice =
+          product.price -
+          product.discountValue;
+
+      }
+
+    } else {
+
+      product.finalPrice = product.price;
+
+    }
 
     await product.save();
 
-    res.json({
+    res.status(200).json({
       success: true,
       message: "Product updated successfully",
       data: product,
     });
 
   } catch (error: any) {
-    console.log("UPDATE ERROR:", error);
+
+    console.log("UPDATE ERROR =", error);
 
     res.status(500).json({
       success: false,
       message: error.message,
     });
+
   }
+
 };
 
 export const getCategoryAnalytics = async (req, res) => {

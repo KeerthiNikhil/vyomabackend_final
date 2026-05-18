@@ -58,7 +58,7 @@ router.get("/:id", getProductById);
 /* DELETE */
 router.delete("/:productId", protect, deleteProduct);
 
-router.put("/:id", protect, updateProduct);
+router.put("/:productId", protect, updateProduct);
 
 router.post("/bulk-upload", upload.single("file"), bulkUploadProducts);
 
