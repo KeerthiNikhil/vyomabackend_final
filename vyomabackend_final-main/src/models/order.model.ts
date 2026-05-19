@@ -31,10 +31,10 @@ export interface IOrder extends Document {
     pincode: string;
   };
 
-  status:
-    | "Pending"
-    | "Delivered"
-    | "Cancelled";
+ status:
+  | "pending"
+  | "delivered"
+  | "cancelled";
 }
 
 const orderSchema = new Schema<IOrder>(
@@ -99,11 +99,12 @@ const orderSchema = new Schema<IOrder>(
     status: {
       type: String,
       enum: [
-        "Pending",
-        "Delivered",
-        "Cancelled",
-      ],
-      default: "Pending",
+  "pending",
+  "delivered",
+  "cancelled",
+],
+
+default: "pending",
     },
   },
 

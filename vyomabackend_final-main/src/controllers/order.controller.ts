@@ -2,6 +2,7 @@ import Order from "../models/order.model";
 import Cart from "../models/cart.model";
 import Razorpay from "razorpay";
 import crypto from "crypto";
+import Shop from "../models/shop.model";
 
 console.log("KEY_ID 👉", process.env.RAZORPAY_KEY_ID);
 console.log("KEY_SECRET 👉", process.env.RAZORPAY_KEY_SECRET);
@@ -45,6 +46,7 @@ export const placeOrder = async (req, res) => {
       totalAmount,
       deliveryCharge,
       shippingAddress,
+      items,
     } = req.body;
 
     if (paymentMethod !== "COD") {
@@ -56,25 +58,23 @@ export const placeOrder = async (req, res) => {
 
     }
 
-    const cart = await Cart.findOne({
-      user: req.user.id,
-    });
-
-    if (!cart || cart.items.length === 0) {
+    if (!items || items.length === 0) {
 
       return res.status(400).json({
-        message: "Cart is empty",
+        success: false,
+        message: "No items found",
       });
 
     }
 
-    const products = cart.items.map((item) => ({
-      product: item.productId,
+    const products = items.map((item) => ({
+      product: item.product,
       quantity: item.quantity,
       price: item.price,
     }));
 
-    const shop = cart.items[0]?.shop;
+    // ✅ VERY IMPORTANT
+    const shop = items[0]?.shop;
 
     const order = await Order.create({
 
@@ -88,28 +88,40 @@ export const placeOrder = async (req, res) => {
 
       deliveryCharge,
 
-      paymentMethod,
-
       shippingAddress,
 
-      status: "Pending",
+      paymentMethod,
+
+      paymentStatus: "Pending",
+
+      status: "pending",
+
     });
 
-    cart.items = [];
+    // CLEAR CART
+    const cart = await Cart.findOne({
+      user: req.user.id,
+    });
 
-    await cart.save();
+    if (cart) {
+
+      cart.items = [];
+
+      await cart.save();
+
+    }
 
     res.json({
       success: true,
-      message: "Order placed successfully 🎉",
       order,
     });
 
   } catch (err) {
 
-    console.error(err);
+    console.log(err);
 
     res.status(500).json({
+      success: false,
       message: "Order failed",
     });
 
@@ -118,110 +130,215 @@ export const placeOrder = async (req, res) => {
 
 // ================= VERIFY PAYMENT =================
 export const verifyPayment = async (req, res) => {
+
   try {
-    console.log("🔥 VERIFY PAYMENT HIT");
 
     const {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
       totalAmount,
+      deliveryCharge,
+      shippingAddress,
+      items,
     } = req.body;
 
-    // ❌ Missing fields
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+    if (
+      !razorpay_order_id ||
+      !razorpay_payment_id ||
+      !razorpay_signature
+    ) {
+
       return res.status(400).json({
         success: false,
         message: "Payment not completed ❌",
       });
+
     }
-console.log("FULL PAYMENT OBJECT 👉", payment);
+
     const razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
 
-    // ✅ Verify signature
     const generatedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .createHmac(
+        "sha256",
+        process.env.RAZORPAY_KEY_SECRET
+      )
+      .update(
+        `${razorpay_order_id}|${razorpay_payment_id}`
+      )
       .digest("hex");
 
-    if (generatedSignature !== razorpay_signature) {
+    if (
+      generatedSignature !== razorpay_signature
+    ) {
+
       return res.status(400).json({
         success: false,
         message: "Signature mismatch ❌",
       });
+
     }
 
-    // ✅ Fetch payment
     let payment;
+
     try {
-      payment = await razorpay.payments.fetch(razorpay_payment_id);
+
+      payment = await razorpay.payments.fetch(
+        razorpay_payment_id
+      );
+
     } catch (err) {
+
       return res.status(400).json({
         success: false,
         message: "Payment not completed ❌",
       });
+
     }
 
-    // ❌ NOT PAID
     if (payment.status !== "captured") {
+
       return res.status(400).json({
         success: false,
         message: "Payment not completed ❌",
       });
+
     }
 
-    // ✅ CREATE ORDER ONLY AFTER PAYMENT
-    const cart = await Cart.findOne({ user: req.user.id });
-
-    if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ message: "Cart empty" });
-    }
-
-    const products = cart.items.map((item) => ({
-      product: item.productId,
+    const products = items.map((item) => ({
+      product: item.product,
       quantity: item.quantity,
       price: item.price,
     }));
 
-    const shop = cart.items[0]?.shop;
+    const shop = items[0]?.shop;
 
-   await Order.create({
+    await Order.create({
 
-  user: req.user.id,
+      user: req.user.id,
 
-  shop,
+      shop,
 
-  products,
+      products,
 
-  totalAmount,
+      totalAmount,
 
-  deliveryCharge: req.body.deliveryCharge || 0,
+      deliveryCharge,
 
-  paymentMethod: "ONLINE",
+      shippingAddress,
 
-  paymentId: razorpay_payment_id,
+      paymentMethod: "ONLINE",
 
-  shippingAddress: req.body.shippingAddress,
+      paymentId: razorpay_payment_id,
 
-  status: "Pending",
-});
+      status: "pending",
 
-    cart.items = [];
-    await cart.save();
+    });
+
+    // CLEAR CART
+    const cart = await Cart.findOne({
+      user: req.user.id,
+    });
+
+    if (cart) {
+
+      cart.items = [];
+
+      await cart.save();
+
+    }
 
     return res.json({
       success: true,
       message: "Payment verified ✅",
     });
+
   } catch (err) {
-    console.error("VERIFY ERROR:", err);
+
+    console.log(err);
 
     return res.status(500).json({
       success: false,
       message: "Verification failed ❌",
     });
+
+  }
+};
+export const getOrders = async (req, res) => {
+
+  try {
+
+    // vendor shop
+    const shop = await Shop.findOne({
+      vendor: req.user.id,
+    });
+
+    if (!shop) {
+
+      return res.json({
+        success: true,
+        data: [],
+      });
+
+    }
+
+    // only vendor shop orders
+    const orders = await Order.find({
+      shop: shop._id,
+    })
+      .populate("user", "name email")
+      .populate({
+  path: "products.product",
+  select: "name images price",
+})
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: orders,
+    });
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch orders",
+    });
+
+  }
+};
+
+export const getMyOrders = async (req, res) => {
+
+  try {
+
+    const orders = await Order.find({
+      user: req.user.id,
+    })
+      .populate({
+  path: "products.product",
+  select: "name images price",
+})
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: orders,
+    });
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch orders",
+    });
+
   }
 };
