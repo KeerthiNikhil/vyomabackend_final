@@ -272,8 +272,8 @@ export const getOrders = async (req, res) => {
   try {
 
     // vendor shop
-    const shop = await Shop.findOne({
-      vendor: req.user.id,
+    const shop = await Shop.find({
+      owner: req.user.id,
     });
 
     if (!shop) {
@@ -341,4 +341,65 @@ export const getMyOrders = async (req, res) => {
     });
 
   }
+};
+export const getVendorOrders = async (req, res) => {
+
+  try {
+
+    const vendorId = req.user.id;
+
+    // ALL vendor shops
+    const shops = await Shop.find({
+      owner: vendorId,
+    });
+
+    // no shops
+    if (!shops || shops.length === 0) {
+
+      return res.status(200).json({
+        success: true,
+        data: [],
+      });
+
+    }
+
+    // all shop ids
+    const shopIds = shops.map(
+      (shop) => shop._id
+    );
+
+    console.log("SHOP IDS =", shopIds);
+
+    // fetch orders of all shops
+    const orders = await Order.find({
+      shop: { $in: shopIds },
+    })
+      .populate("user", "name email")
+      .populate({
+        path: "products.product",
+        select: "name images price shop",
+      })
+      .sort({ createdAt: -1 });
+
+    console.log(
+      "TOTAL ORDERS =",
+      orders.length
+    );
+
+    res.status(200).json({
+      success: true,
+      data: orders,
+    });
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch vendor orders",
+    });
+
+  }
+
 };
