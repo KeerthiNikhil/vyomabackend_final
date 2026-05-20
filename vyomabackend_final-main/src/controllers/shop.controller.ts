@@ -21,6 +21,7 @@ const imageUrls = files.map((file) => file.location);
       address,
       latitude,
       longitude,
+      visibilityDistance,
       gstNumber,
       udyamNumber,
       fssaiNumber,
@@ -49,6 +50,7 @@ const imageUrls = files.map((file) => file.location);
       udyamNumber,
       fssaiNumber,
       tradeLicenseNumber,
+      visibilityDistance,
       shopImages,
       location: {
         type: "Point",
@@ -207,10 +209,13 @@ export const addShopImages = async (req, res) => {
     res.status(500).json({ message: "Error uploading images" });
   }
 };
+
 export const updateShop = async (req: any, res: any) => {
   try {
 
     const shop = await Shop.findById(req.params.id);
+    const files =
+  req.files as Express.MulterS3.File[];
 
     if (!shop) {
       return res.status(404).json({
@@ -235,7 +240,12 @@ export const updateShop = async (req: any, res: any) => {
       email,
       address,
       description,
+      
     } = req.body;
+    const existingImages =
+  JSON.parse(
+    req.body.existingImages || "[]"
+  );
 
     shop.shopName =
       shopName || shop.shopName;
@@ -257,6 +267,15 @@ export const updateShop = async (req: any, res: any) => {
 
     shop.description =
       description || shop.description;
+      const uploadedImages =
+  files?.map(
+    (file) => file.location
+  ) || [];
+
+shop.shopImages = [
+  ...existingImages,
+  ...uploadedImages,
+];
 
     await shop.save();
 
@@ -270,6 +289,44 @@ export const updateShop = async (req: any, res: any) => {
     res.status(500).json({
       success: false,
       message: error.message,
+    });
+
+  }
+};
+export const toggleShopStatus = async (req, res) => {
+
+  try {
+
+    const shop = await Shop.findById(req.params.id);
+
+    if (!shop) {
+      return res.status(404).json({
+        success: false,
+      });
+    }
+
+    if (
+      String(shop.owner) !==
+      String(req.user._id)
+    ) {
+      return res.status(403).json({
+        success: false,
+      });
+    }
+
+    shop.isOpen = !shop.isOpen;
+
+    await shop.save();
+
+    res.json({
+      success: true,
+      data: shop,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
     });
 
   }

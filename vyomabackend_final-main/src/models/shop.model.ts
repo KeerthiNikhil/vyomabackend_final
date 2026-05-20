@@ -14,6 +14,7 @@ export interface IShop extends Document {
   udyamNumber?: string;
   fssaiNumber?: string;
   tradeLicenseNumber?: string;
+  visibilityDistance?: number;
 
   shopImage?: string;
 
@@ -21,6 +22,15 @@ export interface IShop extends Document {
     type: "Point";
     coordinates: [number, number];
   };
+  isOpen: {
+  type: Boolean,
+  default: true,
+},
+
+vacationMode: {
+  type: Boolean,
+  default: false,
+},
 
   isActive: boolean;
   createdAt: Date;
@@ -72,6 +82,11 @@ const shopSchema = new Schema<IShop>(
     udyamNumber: String,
     fssaiNumber: String,
     tradeLicenseNumber: String,
+
+    visibilityDistance: {
+  type: Number,
+  default: 10, // default 10 km
+},
 
     shopImages: [String],
 

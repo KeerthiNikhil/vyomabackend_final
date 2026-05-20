@@ -4,14 +4,17 @@ import { protect } from "../middleware/auth.middleware";
 import {
   createShop,
   getMyShops,
-  addShopImages
+  addShopImages,
+  updateShop,
+  toggleShopStatus,
+  getVendorShops
 } from "../controllers/shop.controller";
 
 import Shop from "../models/shop.model";
-import { getVendorShops } from "../controllers/shop.controller";
 import { restrictToVendor } from "../middleware/restrict.middleware";
 import { upload } from "../middleware/upload";
-import { updateShop } from "../controllers/shop.controller";
+import { getDistanceFromLatLonInKm }
+from "../utils/distance";
 
 const router = express.Router();
 
@@ -53,20 +56,26 @@ router.get("/nearby", async (req, res) => {
 
     const { lat, lng } = req.query;
 
-    const shops = await Shop.find({
-      location: {
-        $near: {
-          $geometry: {
-            type: "Point",
-            coordinates: [
-              parseFloat(lng as string),
-              parseFloat(lat as string),
-            ],
-          },
-          $maxDistance: 5000,
-        },
-      },
-    });
+   const shops = await Shop.find();
+
+const nearbyShops = shops.filter((shop) => {
+
+  const [shopLng, shopLat] =
+    shop.location.coordinates;
+
+  const distanceInKm =
+    getDistanceFromLatLonInKm(
+      parseFloat(lat as string),
+      parseFloat(lng as string),
+      shopLat,
+      shopLng
+    );
+
+  return (
+    distanceInKm <=
+    (shop.visibilityDistance || 10)
+  );
+});
 
     res.json({
       success: true,
@@ -118,7 +127,13 @@ router.post(
 router.put(
   "/:id",
   protect,
+  upload.array("shopImages", 5),
   updateShop
 );
 
+router.put(
+  "/:id/toggle-status",
+  protect,
+  toggleShopStatus
+);
 export default router;
