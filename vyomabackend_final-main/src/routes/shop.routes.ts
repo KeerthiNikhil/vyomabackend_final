@@ -11,6 +11,7 @@ import Shop from "../models/shop.model";
 import { getVendorShops } from "../controllers/shop.controller";
 import { restrictToVendor } from "../middleware/restrict.middleware";
 import { upload } from "../middleware/upload";
+import { updateShop } from "../controllers/shop.controller";
 
 const router = express.Router();
 
@@ -113,6 +114,11 @@ router.post(
   protect, // ✅ fix this
   upload.array("shopImages", 3),
   addShopImages
+);
+router.put(
+  "/:id",
+  protect,
+  updateShop
 );
 
 export default router;

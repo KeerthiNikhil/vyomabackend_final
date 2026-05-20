@@ -39,6 +39,5 @@ router.put(
   updateMyProfile
 );
 router.get("/profile", protect, getMyProfile);
-router.put("/profile", protect, updateMyProfile);
 
 export default router;

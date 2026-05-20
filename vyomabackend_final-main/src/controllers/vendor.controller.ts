@@ -81,11 +81,11 @@ export const getMyProfile = async (req, res) => {
           phone: user.phone,
         },
         shops: shops.map((shop) => ({
-          id: shop._id,
-          name: shop.name,
-          address: shop.address,
-          description: shop.description,
-        })),
+  id: shop._id,
+  name: shop.shopName,
+  address: shop.address,
+  description: shop.description,
+})),
       },
     });
   } catch (error) {

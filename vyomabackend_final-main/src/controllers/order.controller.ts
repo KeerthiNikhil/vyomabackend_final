@@ -271,12 +271,13 @@ export const getOrders = async (req, res) => {
 
   try {
 
-    // vendor shop
-    const shop = await Shop.find({
+    // ALL vendor shops
+    const shops = await Shop.find({
       owner: req.user.id,
     });
 
-    if (!shop) {
+    // no shops
+    if (!shops || shops.length === 0) {
 
       return res.json({
         success: true,
@@ -285,16 +286,28 @@ export const getOrders = async (req, res) => {
 
     }
 
-    // only vendor shop orders
+    // ✅ GET ALL SHOP IDS HERE
+    const shopIds = shops.map(
+      (shop) => shop._id
+    );
+
+    console.log("SHOP IDS =", shopIds);
+
+    // all orders from all shops
     const orders = await Order.find({
-      shop: shop._id,
+      shop: { $in: shopIds },
     })
       .populate("user", "name email")
       .populate({
-  path: "products.product",
-  select: "name images price",
-})
+        path: "products.product",
+        select: "name images price",
+      })
       .sort({ createdAt: -1 });
+
+    console.log(
+      "TOTAL DASHBOARD ORDERS =",
+      orders.length
+    );
 
     res.json({
       success: true,
@@ -311,6 +324,7 @@ export const getOrders = async (req, res) => {
     });
 
   }
+
 };
 
 export const getMyOrders = async (req, res) => {

@@ -112,7 +112,7 @@ export const getVendorShops = async (req: any, res: any) => {
 
     const shops = await Shop.find({
       owner: req.user._id
-    }).select("_id shopName");
+    });
 
     res.json({
       success: true,
@@ -205,5 +205,72 @@ export const addShopImages = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Error uploading images" });
+  }
+};
+export const updateShop = async (req: any, res: any) => {
+  try {
+
+    const shop = await Shop.findById(req.params.id);
+
+    if (!shop) {
+      return res.status(404).json({
+        success: false,
+        message: "Shop not found",
+      });
+    }
+
+    // security
+    if (String(shop.owner) !== String(req.user._id)) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    const {
+      shopName,
+      ownerName,
+      businessType,
+      phone,
+      email,
+      address,
+      description,
+    } = req.body;
+
+    shop.shopName =
+      shopName || shop.shopName;
+
+    shop.ownerName =
+      ownerName || shop.ownerName;
+
+    shop.businessType =
+      businessType || shop.businessType;
+
+    shop.phone =
+      phone || shop.phone;
+
+    shop.email =
+      email || shop.email;
+
+    shop.address =
+      address || shop.address;
+
+    shop.description =
+      description || shop.description;
+
+    await shop.save();
+
+    res.json({
+      success: true,
+      data: shop,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
   }
 };
