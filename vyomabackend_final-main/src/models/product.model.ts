@@ -10,6 +10,12 @@ export interface IProduct extends Document {
 
   discountType?: "percentage" | "flat";
   discountValue?: number;
+  offers?: {
+  title: string;
+  type: "product" | "category" | "global";
+}[];
+
+rewardCoins?: number;
   finalPrice?: number;
 
   shop: mongoose.Types.ObjectId;
@@ -22,6 +28,7 @@ export interface IProduct extends Document {
   label: string;
   price: number;
 }[];
+deliveryFee?:number;
 productDetails?: {
   title: string;
   content: string;
@@ -79,8 +86,29 @@ const productSchema = new Schema<IProduct>(
       type: String,
       enum: ["percentage", "flat"]
     },
+    deliveryFee: {
+  type: Number,
+  default: 0,
+},
     
     discountValue: Number,
+    offers: [
+  {
+    title: String,
+    type: {
+      type: String,
+      enum: [
+        "product",
+        "category",
+        "global"
+      ]
+    }
+  }
+],
+rewardCoins: {
+  type: Number,
+  default: 0
+},
 
     finalPrice: Number,
 
@@ -112,6 +140,11 @@ returnPolicy: String,
 codAvailable: {
   type: Boolean,
   default: true,
+},
+
+deliveryFee: {
+  type: Number,
+  default: 40
 },
 productDetails: [
   {

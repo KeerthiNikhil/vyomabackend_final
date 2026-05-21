@@ -10,8 +10,8 @@ export const createProduct = async (req: any, res: any) => {
 
     const userId = req.user.id;
     
-
-    const {
+   
+   const {
   name,
   description,
   price,
@@ -20,9 +20,12 @@ export const createProduct = async (req: any, res: any) => {
   subCategory,
   discountType,
   discountValue,
+  rewardCoins,
+  offers,
   shop,
   unitOptions,
   productDetails,
+  deliveryFee,
   expiryDate,
   weight,
   size,
@@ -88,7 +91,15 @@ if (req.files && Array.isArray(req.files)) {
 
       shop,
 
+      deliveryFee:
+  Number(deliveryFee || 0),
+
       images,
+     rewardCoins: Number(rewardCoins || 0),
+
+offers: offers
+  ? JSON.parse(offers)
+  : [],
 
       unitOptions: unitOptions
   ? JSON.parse(unitOptions)

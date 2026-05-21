@@ -7,6 +7,10 @@ const cartItemSchema = new mongoose.Schema({
   image: String,
   shop: { type: mongoose.Schema.Types.ObjectId, ref: "Shop" },
   quantity: Number,
+  deliveryFee: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const cartSchema = new mongoose.Schema(

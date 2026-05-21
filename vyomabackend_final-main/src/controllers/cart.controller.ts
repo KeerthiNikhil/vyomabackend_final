@@ -12,7 +12,7 @@ export const getCart = async (req: any, res: any) => {
 
 // ADD TO CART
 export const addToCart = async (req: any, res: any) => {
-  const { productId, name, price, image,shop } = req.body;
+  const { productId, name, price, image,shop,deliveryFee, } = req.body;
 
   let cart = await Cart.findOne({ user: req.user.id });
 
@@ -29,7 +29,8 @@ export const addToCart = async (req: any, res: any) => {
   } else {
     cart.items.push({
          productId, name, 
-      price, image,shop, quantity: 1 });
+      price, image,shop, quantity: 1,
+      deliveryFee: Number(deliveryFee || 0), });
   }
 
   await cart.save();
