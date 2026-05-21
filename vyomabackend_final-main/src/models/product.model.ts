@@ -127,7 +127,12 @@ rewardCoins: {
    unitOptions: [
   {
     label: String,
+
+    // original MRP
     price: Number,
+
+    // discounted price
+    finalPrice: Number,
   },
 ],
 

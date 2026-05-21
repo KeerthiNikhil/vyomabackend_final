@@ -16,7 +16,7 @@ export const createRazorpayOrder = async (req, res) => {
     });
 
     const { amount } = req.body;
-
+    
     const order = await razorpay.orders.create({
       amount: Math.round(amount * 100),
       currency: "INR",
@@ -75,7 +75,9 @@ export const placeOrder = async (req, res) => {
 
     // ✅ VERY IMPORTANT
     const shop = items[0]?.shop;
-
+    
+    console.log("ITEMS RECEIVED =", items);
+console.log("SHOP RECEIVED =", items[0]?.shop);
     const order = await Order.create({
 
       user: req.user.id,
@@ -268,32 +270,32 @@ export const verifyPayment = async (req, res) => {
   }
 };
 export const getOrders = async (req, res) => {
-
   try {
 
-    // ALL vendor shops
+    console.log("CURRENT USER =", req.user.id);
+
     const shops = await Shop.find({
       owner: req.user.id,
     });
 
-    // no shops
-    if (!shops || shops.length === 0) {
+    console.log(
+      "VENDOR SHOPS =",
+      shops.map((s) => s._id)
+    );
 
+    if (!shops.length) {
       return res.json({
         success: true,
         data: [],
       });
-
     }
 
-    // ✅ GET ALL SHOP IDS HERE
     const shopIds = shops.map(
       (shop) => shop._id
     );
 
     console.log("SHOP IDS =", shopIds);
 
-    // all orders from all shops
     const orders = await Order.find({
       shop: { $in: shopIds },
     })
@@ -305,7 +307,7 @@ export const getOrders = async (req, res) => {
       .sort({ createdAt: -1 });
 
     console.log(
-      "TOTAL DASHBOARD ORDERS =",
+      "ORDERS FOUND =",
       orders.length
     );
 
@@ -324,7 +326,6 @@ export const getOrders = async (req, res) => {
     });
 
   }
-
 };
 
 export const getMyOrders = async (req, res) => {

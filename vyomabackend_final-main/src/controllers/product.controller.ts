@@ -72,7 +72,21 @@ if (req.files && Array.isArray(req.files)) {
   });
 
 }
+const basePrice = Number(price || 0);
 
+let finalPrice = basePrice;
+
+if (discountType === "percentage") {
+  finalPrice =
+    basePrice -
+    (basePrice * Number(discountValue || 0)) / 100;
+}
+
+if (discountType === "flat") {
+  finalPrice =
+    basePrice -
+    Number(discountValue || 0);
+}
     /* CREATE PRODUCT */
 
     const product = await Product.create({
@@ -80,7 +94,8 @@ if (req.files && Array.isArray(req.files)) {
       name,
       description,
 
-      price: Number(price || 0),
+     price: basePrice,
+      finalPrice,
       stock: Number(stock),
 
       category,
@@ -101,9 +116,7 @@ offers: offers
   ? JSON.parse(offers)
   : [],
 
-      unitOptions: unitOptions
-  ? JSON.parse(unitOptions)
-  : [],
+      unitOptions: finalUnits,
 
 productDetails: productDetails
   ? JSON.parse(productDetails)
@@ -178,7 +191,7 @@ export const deleteProduct = async (req: any, res: any) => {
 
 };
 
-/* ================= GET PRODUCTS BY SHOP ================= */
+
 
 /* ================= GET PRODUCTS BY SHOP ================= */
 
@@ -187,11 +200,41 @@ export const getProductsByShop = async (req: any, res: any) => {
   try {
 
     const { shopId } = req.params;
-
+    
     const products = await Product.find({
       shop: shopId,
       isActive: true
     }).sort({ createdAt: -1 });
+    products.forEach((p) => {
+  if (!p.finalPrice) {
+
+    if (
+      p.discountType === "percentage"
+    ) {
+
+      p.finalPrice =
+        p.price -
+        (p.price *
+          p.discountValue) /
+          100;
+
+    } else if (
+      p.discountType === "flat"
+    ) {
+
+      p.finalPrice =
+        p.price -
+        p.discountValue;
+
+    } else {
+
+      p.finalPrice = p.price;
+
+    }
+
+  }
+});
+
 
     res.json({
       success: true,
@@ -218,6 +261,7 @@ export const getProductsByShop = async (req: any, res: any) => {
 export const getVendorProducts = async (req, res) => {
   try {
 
+ 
     res.set("Cache-Control", "no-store");
 
     // ✅ STEP 1: get all shops of this vendor
@@ -230,6 +274,35 @@ export const getVendorProducts = async (req, res) => {
       shop: { $in: shops.map(s => s._id) },
     }).populate("shop");
 
+       products.forEach((p) => {
+  if (!p.finalPrice) {
+
+    if (
+      p.discountType === "percentage"
+    ) {
+
+      p.finalPrice =
+        p.price -
+        (p.price *
+          p.discountValue) /
+          100;
+
+    } else if (
+      p.discountType === "flat"
+    ) {
+
+      p.finalPrice =
+        p.price -
+        p.discountValue;
+
+    } else {
+
+      p.finalPrice = p.price;
+
+    }
+
+  }
+});
     res.status(200).json({
       success: true,
       data: products,
@@ -307,6 +380,31 @@ if (!product) {
     message: "Product not found",
   });
 }
+
+if (!product.finalPrice) {
+
+  if (product.discountType === "percentage") {
+
+    product.finalPrice =
+      product.price -
+      (product.price * product.discountValue) / 100;
+
+  } else if (product.discountType === "flat") {
+
+    product.finalPrice =
+      product.price -
+      product.discountValue;
+
+  } else {
+
+    product.finalPrice =
+      product.price;
+
+  }
+
+}
+
+
 
 /* AUTO FALLBACK FOR OLD PRODUCTS */
 if (!product.unitOptions || product.unitOptions.length === 0) {
